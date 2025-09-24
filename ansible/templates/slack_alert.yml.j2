@@ -1,0 +1,15 @@
+name: wazuh_critical_alerts
+type: any
+index: wazuh-alerts-*
+filter:
+  - term:
+      rule.level: 10
+slack_webhook_url: "{{ slack_webhook_url }}"
+slack_msg_color: "#FF0000"
+alert:
+  - "slack"
+slack_text: |
+  *Critical Wazuh Alert*
+  Host: {{ host }}
+  Description: {{ rule.description }}
+  Time: {{ '@timestamp' }}

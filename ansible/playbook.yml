@@ -1,0 +1,215 @@
+- name: Deploy ELK + Wazuh with ElastAlert
+  hosts: elk
+  become: yes
+  vars_files:
+    - group_vars/all/vault.yml
+  vars:
+    elk_repo_url: "https://artifacts.elastic.co/packages/7.x/apt"
+    wazuh_repo_url: "https://packages.wazuh.com/4.x/apt"
+
+  tasks:
+    - name: Ensure apt cache is up to date
+      apt:
+        update_cache: yes
+
+    - name: Install prerequisites
+      apt:
+        name:
+          - apt-transport-https
+          - curl
+          - wget
+          - python3-pip
+        state: present
+
+    - name: Add Elastic GPG key
+      apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+
+    - name: Add Elastic repository
+      apt_repository:
+        repo: "deb {{ elk_repo_url }} stable main"
+        state: present
+
+    - name: Install ELK packages
+      apt:
+        name:
+          - elasticsearch
+          - logstash
+          - kibana
+        state: present
+
+    - name: Deploy Elasticsearch config
+      copy:
+        src: "../configs/elasticsearch.yml"
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        owner: root
+        mode: '0644'
+
+    - name: Create Elasticsearch JVM heap settings
+      copy:
+        content: |
+          -Xms512m
+          -Xmx512m
+        dest: /etc/elasticsearch/jvm.options.d/heap.options
+        owner: root
+        mode: '0644'
+
+    - name: Set vm.max_map_count for Elasticsearch
+      sysctl:
+        name: vm.max_map_count
+        value: 262144
+        state: present
+        reload: yes
+
+    - name: Deploy Logstash pipeline
+      copy:
+        src: "../configs/logstash/wazuh.conf"
+        dest: "/etc/logstash/conf.d/02-wazuh.conf"
+        owner: root
+        mode: '0644'
+
+    - name: Deploy Kibana config
+      copy:
+        src: "../configs/kibana.yml"
+        dest: "/etc/kibana/kibana.yml"
+        owner: root
+        mode: '0644'
+
+    - name: Enable and start ELK services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      loop:
+        - elasticsearch
+        - logstash
+        - kibana
+
+    - name: Add Wazuh GPG key
+      apt_key:
+        url: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+        state: present
+
+    - name: Add Wazuh repository
+      apt_repository:
+        repo: "deb {{ wazuh_repo_url }} stable main"
+        state: present
+
+    - name: Install Wazuh Manager and Filebeat
+      apt:
+        name:
+          - wazuh-manager
+          - filebeat
+        state: present
+
+    - name: Deploy Filebeat config for Wazuh
+      copy:
+        src: "../configs/logstash/wazuh.conf"
+        dest: "/etc/filebeat/filebeat.yml"
+        owner: root
+        mode: '0644'
+
+    - name: Enable and start Wazuh Manager and Filebeat
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      loop:
+        - wazuh-manager
+        - filebeat
+
+    - name: Install Wazuh Kibana plugin
+      command: >
+        /usr/share/kibana/bin/kibana-plugin install
+        https://packages.wazuh.com/4.x/ui/kibana/wazuh-kibana-4.x.x.zip
+      args:
+        creates: /usr/share/kibana/plugins/wazuh-kibana
+
+    - name: Restart Kibana to apply plugin
+      systemd:
+        name: kibana
+        state: restarted
+
+    - name: Wait for Kibana to start
+      wait_for:
+        port: 5601
+        delay: 30
+
+    - name: Create Kibana index pattern for Wazuh alerts
+      uri:
+        url: "http://localhost:5601/api/saved_objects/index-pattern/wazuh-alerts-*"
+        method: POST
+        headers:
+          kbn-xsrf: "true"
+          Content-Type: "application/json"
+        body: '{"attributes":{"title":"wazuh-alerts-*","timeFieldName":"@timestamp"}}'
+
+    # ElastAlert Configuration
+    - name: Install ElastAlert via pip
+      pip:
+        name: elastalert
+        state: present
+
+    - name: Create ElastAlert directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        mode: '0755'
+      loop:
+        - /etc/elastalert
+        - /etc/elastalert/rules
+        - /var/log/elastalert
+
+    - name: Deploy ElastAlert main config
+      copy:
+        content: |
+          es_host: localhost
+          es_port: 9200
+          name: elastalert
+          type: any
+          index: elastalert_status
+          days: 2
+          hours: 1
+          realert:
+            minutes: 0
+          buffer_time:
+            minutes: 15
+        dest: /etc/elastalert/config.yml
+        owner: root
+        mode: '0644'
+
+    - name: Deploy ElastAlert Slack rule template
+      template:
+        src: templates/slack_alert.yml.j2
+        dest: /etc/elastalert/rules/slack_alert.yml
+        owner: root
+        mode: '0644'
+
+    - name: Create ElastAlert systemd service
+      copy:
+        content: |
+          [Unit]
+          Description=ElastAlert
+          After=network.target elasticsearch.service
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory=/etc/elastalert
+          ExecStart=/usr/local/bin/elastalert --config /etc/elastalert/config.yml --verbose
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/elastalert.service
+        owner: root
+        mode: '0644'
+
+    - name: Reload systemd and enable ElastAlert
+      systemd:
+        name: elastalert
+        daemon_reload: yes
+        enabled: yes
+        state: started

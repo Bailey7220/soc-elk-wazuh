@@ -9,8 +9,7 @@ jobs:
     name: ShellCheck Scripts
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Lint Shell Scripts
@@ -20,14 +19,9 @@ jobs:
     name: YAML Linting
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Install yamllint & dos2unix
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y yamllint dos2unix
-
+        run: sudo apt-get update && sudo apt-get install -y yamllint dos2unix
       - name: Locate elasticsearch.yml
         id: find_config
         run: |
@@ -37,10 +31,8 @@ jobs:
             exit 1
           fi
           echo "config_path=$CONFIG_PATH" >> $GITHUB_OUTPUT
-
       - name: Normalize line endings
         run: dos2unix "${{ steps.find_config.outputs.config_path }}"
-
       - name: Lint Elasticsearch YAML
         run: yamllint --strict "${{ steps.find_config.outputs.config_path }}"
 
@@ -48,8 +40,7 @@ jobs:
     name: Terraform Validation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -71,15 +62,13 @@ jobs:
     name: Ansible Linting
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Install Ansible
+      - uses: actions/checkout@v3
+      - name: Install Python and pip
+        run: sudo apt-get update && sudo apt-get install -y python3-pip
+      - name: Install Ansible and ansible-lint via pip
         run: |
-          sudo apt-get update
-          sudo apt-get remove -y ansible-core ansible
-          sudo apt-get install -y ansible-core
-      - name: Install ansible-lint
-        run: sudo apt-get install -y ansible-lint
+          pip3 install --upgrade pip
+          pip3 install ansible-core==2.18.8 ansible==2.18.8 ansible-lint
       - name: Lint Ansible Playbook
         run: |
           cd ansible

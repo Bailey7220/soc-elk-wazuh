@@ -1,0 +1,16 @@
+name: Configs Debug
+
+on: [push]
+
+jobs:
+  debug-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Print root listing
+        run: ls -la
+
+      - name: Print configs dir listing
+        run: ls -la configs || ls -la config || echo "Neither configs nor config directory exists"

@@ -2,12 +2,13 @@
 set -e
 
 # Install Wazuh Kibana plugin
-/usr/share/kibana/bin/kibana-plugin install https://packages.wazuh.com/4.x/ui/kibana/wazuh-kibana-4.x.x.zip
+/usr/share/kibana/bin/kibana-plugin install \
+  https://packages.wazuh.com/4.x/ui/kibana/wazuh-kibana-4.x.x.zip
 
 # Restart Kibana to load plugin
 systemctl restart kibana
 
-# Create index pattern via Kibana API (requires no auth by default)
+# Create index pattern via Kibana API
 curl -s -X POST http://localhost:5601/api/saved_objects/index-pattern/wazuh-alerts-* \
   -H "kbn-xsrf: true" \
   -H "Content-Type: application/json" \

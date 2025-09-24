@@ -43,23 +43,23 @@ resource "aws_security_group" "soc_sg" {
   }
 }
 
-resource "aws_instance" "soc_vm" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
-  key_name               = aws_key_pair.soc_key.key_name
-  vpc_security_group_ids = [aws_security_group.soc_sg.id]
-
-  tags = {
-    Name = "soc-elk-wazuh"
-  }
-}
-
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+}
+
+resource "aws_instance" "soc_vm" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t3.micro"          # Changed to a Free Tier–eligible type
+  key_name               = aws_key_pair.soc_key.key_name
+  vpc_security_group_ids = [aws_security_group.soc_sg.id]
+
+  tags = {
+    Name = "soc-elk-wazuh"
   }
 }
 

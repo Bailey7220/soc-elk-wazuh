@@ -5,12 +5,26 @@ on:
   pull_request:
 
 jobs:
-  shellcheck:
-    name: ShellCheck Scripts
+
+  # 1. Debug: list all files and dirs
+  debug:
+    name: Debug Workspace
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: List workspace
+        run: |
+          echo "Workspace root:"
+          ls -R .
+
+  shellcheck:
+    name: ShellCheck Scripts
+    runs-on: ubuntu-latest
+    needs: debug
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
@@ -21,9 +35,9 @@ jobs:
   yamllint:
     name: YAML Linting
     runs-on: ubuntu-latest
+    needs: debug
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Install yamllint
         run: sudo apt-get update && sudo apt-get install -y yamllint
@@ -37,9 +51,9 @@ jobs:
   terraform:
     name: Terraform Validation
     runs-on: ubuntu-latest
+    needs: debug
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -49,6 +63,8 @@ jobs:
       - name: Terraform Format Check
         run: |
           cd terraform
+          pwd
+          ls -l
           terraform fmt -check
 
       - name: Terraform Validate
@@ -59,9 +75,9 @@ jobs:
   ansible-lint:
     name: Ansible Linting
     runs-on: ubuntu-latest
+    needs: debug
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Install ansible-lint
         run: |
@@ -71,4 +87,6 @@ jobs:
       - name: Lint Ansible Playbook
         run: |
           cd ansible
+          pwd
+          ls -l
           ansible-lint playbook.yml

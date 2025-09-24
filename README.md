@@ -1,4 +1,4 @@
-##SOC ELK Wazuh Deployment##
+#SOC ELK Wazuh Deployment#
 
 This repository provides an automated setup for a security operations center (SOC) stack using the ELK (Elasticsearch, Logstash, Kibana) stack and Wazuh. It includes scripts, Ansible playbooks, and CI workflows to install, configure, and validate each component.
 

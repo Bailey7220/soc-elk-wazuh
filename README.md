@@ -1,74 +1,118 @@
-# soc-elk-wazuh
+SOC ELK Wazuh Deployment
 
-**Centralized Logging & Endpoint Detection for SOC Monitoring**
+This repository provides an automated setup for a security operations center (SOC) stack using the ELK (Elasticsearch, Logstash, Kibana) stack and Wazuh. It includes scripts, Ansible playbooks, and CI workflows to install, configure, and validate each component.
+Repository Structure
 
-This repository contains automated scripts and configurations to deploy:
-- ELK Stack (Elasticsearch, Logstash, Kibana)
-- Wazuh Manager & Agent
-
-on a free-tier Ubuntu cloud VM. Follow each script in order once you SSH into the target VM.
-
-## Table of Contents
-
-- [Prerequisites](#prerequisites)  
-- [Scripts Overview](#scripts-overview)  
-- [Execution Order](#execution-order)  
-- [Directory Structure](#directory-structure)  
-- [Next Steps](#next-steps)  
-- [License](#license)
-
-## Prerequisites
-
-- Ubuntu 20.04 LTS VM (≥1 vCPU, 1 GB RAM)  
-- SSH access with `sudo` privileges  
-- Git and network connectivity to internet
-
-## Scripts Overview
-
-1. **install_elk.sh**  
-   Adds Elastic’s repo, installs and configures Elasticsearch, Logstash, and Kibana.
-
-2. **install_wazuh.sh**  
-   Adds Wazuh’s repo, installs and configures the Wazuh Manager and Filebeat.
-
-3. **configure_kibana.sh**  
-   Installs the Wazuh Kibana plugin, creates index patterns, and imports dashboards.
-
-## Execution Order
-
-On your VM:
-
-cd ~/soc-elk-wazuh/scripts
-sudo bash install_elk.sh
-sudo bash install_wazuh.sh
-sudo bash configure_kibana.sh
-
-
-## Directory Structure
-
-soc-elk-wazuh/
-├── README.md
-├── LICENSE
-├── diagrams/
-├── terraform/
 ├── ansible/
+│ ├── playbook.yml # Installs and configures Wazuh Manager, Filebeat, and system settings
+│ └── roles/… # (Optional) Custom Ansible roles if extended
+├── configs/
+│ ├── elasticsearch.yml # Elasticsearch configuration
+│ ├── kibana.yml # Kibana configuration
+│ └── logstash/
+│ └── wazuh.conf # Logstash pipeline for Wazuh alerts
 ├── scripts/
-│ ├── install_elk.sh
-│ ├── install_wazuh.sh
-│ └── configure_kibana.sh
-└── configs/
-├── elasticsearch.yml
-├── kibana.yml
-└── logstash/
-└── wazuh.conf
+│ ├── install_elk.sh # Installs Elasticsearch, Logstash, Kibana
+│ ├── install_wazuh.sh # Installs Wazuh Manager and Filebeat
+│ └── configure_kibana.sh # Installs Wazuh Kibana plugin and sets index pattern
+├── terraform/
+│ └── main.tf # Terraform definitions for cloud infrastructure
+└── .github/workflows/
+└── ci.yml # CI pipeline: shellcheck, yamllint, terraform, ansible-lint
+Prerequisites
+
+    Git 2.25+
+
+    Bash shell on Linux or WSL for Windows
+
+    A Linux target server (Ubuntu 20.04+) with SSH access
+
+    Cloud credentials (if using Terraform to provision hosts)
+
+Quick Start
+
+    Clone the repository
+   
+    git clone https://github.com/your-org/soc-elk-wazuh.git
+    cd soc-elk-wazuh
 
 
-## Next Steps
+Review and customize configuration files in configs/.
 
-- Simulate threat logs and validate detection in Kibana.  
-- Automate VM provisioning with Terraform or Ansible.  
-- Extend with Suricata network IDS or custom alerting rules.
+    elasticsearch.yml: cluster name, network settings, paths
 
-## License
+    kibana.yml: Kibana host, port, SSL settings
 
-Apache 2.0 License
+    logstash/wazuh.conf: pipeline for ingesting Wazuh alerts
+
+Provision infrastructure (optional)
+
+cd terraform
+terraform init
+terraform plan
+terraform apply
+
+Run installation scripts on your target host(s)
+
+# On the target machine:
+sudo bash scripts/install_elk.sh
+sudo bash scripts/install_wazuh.sh
+sudo bash scripts/configure_kibana.sh
+
+Apply Ansible playbook (alternative to scripts)
+
+ansible-playbook -i inventory ansible/playbook.yml
+
+
+Access the stack
+
+    Elasticsearch: http://<host>:9200
+
+    Kibana: http://<host>:5601
+
+CI Pipeline
+
+The CI workflow (.github/workflows/ci.yml) runs on every push and pull request:
+
+    ShellCheck
+    Lints all scripts/*.sh for style and errors.
+
+    YAMLLint
+    Finds and validates elasticsearch.yml for strict YAML conformance.
+
+    Terraform
+
+        terraform init -backend=false
+
+        terraform fmt -check
+
+        terraform validate
+
+    Ansible Lint
+
+        Installs ansible-core and ansible-lint via pip
+
+        Installs required collections (community.general, ansible.posix)
+
+        Lints ansible/playbook.yml for best practices
+
+All checks must pass before merging changes.
+Troubleshooting
+
+    ShellCheck errors: Ensure scripts use LF line endings (dos2unix scripts/*.sh).
+
+    YAMLLint errors: Verify configs/elasticsearch.yml is in configs/ and uses LF endings.
+
+    Terraform errors: Always run terraform init -backend=false before validate.
+
+    Ansible lint errors: Install and reference collections explicitly; use fully-qualified module names.
+
+Next Steps
+
+    Customize dashboards in Kibana for Wazuh alerts.
+
+    Secure the stack with SSL, authentication, and firewalls.
+
+    Automate backups for Elasticsearch indices.
+
+    Extend logging pipelines (e.g., Filebeat modules, custom grok patterns).

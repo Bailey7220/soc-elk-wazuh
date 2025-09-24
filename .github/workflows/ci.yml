@@ -16,34 +16,33 @@ jobs:
       - name: Lint Shell Scripts
         run: shellcheck scripts/*.sh
 
-    yamllint:
-      name: YAML Linting
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Code
-          uses: actions/checkout@v3
+  yamllint:
+    name: YAML Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-        - name: Install yamllint & dos2unix
-          run: |
-            sudo apt-get update
-            sudo apt-get install -y yamllint dos2unix
+      - name: Install yamllint & dos2unix
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yamllint dos2unix
 
-        - name: Locate elasticsearch.yml
-          id: find-config
-          run: |
-            CONFIG_PATH=$(find . -type f -name elasticsearch.yml | head -n1)
-            if [ -z "$CONFIG_PATH" ]; then
-              echo "Error: elasticsearch.yml not found" >&2
-              exit 1
-            fi
-            echo "config_path=$CONFIG_PATH" >> $GITHUB_OUTPUT
+      - name: Locate elasticsearch.yml
+        id: find_config
+        run: |
+          CONFIG_PATH=$(find . -type f -name elasticsearch.yml | head -n1)
+          if [ -z "$CONFIG_PATH" ]; then
+            echo "Error: elasticsearch.yml not found" >&2
+            exit 1
+          fi
+          echo "config_path=$CONFIG_PATH" >> $GITHUB_OUTPUT
 
-        - name: Normalize line endings
-          run: |
-            dos2unix "${{ steps.find-config.outputs.config_path }}"
+      - name: Normalize line endings
+        run: dos2unix "${{ steps.find_config.outputs.config_path }}"
 
-        - name: Lint Elasticsearch YAML
-          run: yamllint --strict "${{ steps.find-config.outputs.config_path }}"
+      - name: Lint Elasticsearch YAML
+        run: yamllint --strict "${{ steps.find_config.outputs.config_path }}"
 
   terraform:
     name: Terraform Validation

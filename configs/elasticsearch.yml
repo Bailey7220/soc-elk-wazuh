@@ -1,5 +1,0 @@
----
-cluster.name: "soc-project"
-node.name: "elk-node-1"
-network.host: "localhost"
-http.port: 9200

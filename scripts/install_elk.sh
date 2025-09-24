@@ -3,8 +3,8 @@ set -e
 
 # 1. Add Elastic APT repo
 curl -s https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
-echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" \
-  | tee /etc/apt/sources.list.d/elastic-7.x.list
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | \
+  tee /etc/apt/sources.list.d/elastic-7.x.list
 apt-get update
 
 # 2. Install Elasticsearch

@@ -1,92 +1,75 @@
 name: CI Pipeline
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-
-  # 1. Debug: list all files and dirs
+  # 1. Debug
   debug:
-    name: Debug Workspace
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: List workspace
-        run: |
-          echo "Workspace root:"
+      - uses: actions/checkout@v3
+      - run: |
+          echo "--- ROOT DIR ---"
           ls -R .
+          echo "--- configs ---"
+          ls -l configs
+          echo "--- scripts ---"
+          ls -l scripts
+          echo "--- terraform ---"
+          ls -l terraform
+          echo "--- ansible ---"
+          ls -l ansible
 
+  # 2. ShellCheck
   shellcheck:
-    name: ShellCheck Scripts
-    runs-on: ubuntu-latest
     needs: debug
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - run: |
+          if ls scripts/*.sh; then
+            shellcheck scripts/*.sh
+          else
+            echo "No shell scripts found!" && exit 1
+          fi
 
-      - name: Install ShellCheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-
-      - name: Lint Shell Scripts
-        run: shellcheck scripts/*.sh
-
+  # 3. YAMLlint
   yamllint:
-    name: YAML Linting
-    runs-on: ubuntu-latest
     needs: debug
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: sudo apt-get update && sudo apt-get install -y yamllint
+      - run: |
+          yamllint --strict configs/elasticsearch.yml
+          yamllint --strict configs/kibana.yml
 
-      - name: Install yamllint
-        run: sudo apt-get update && sudo apt-get install -y yamllint
-
-      - name: Lint Elasticsearch YAML
-        run: yamllint --strict configs/elasticsearch.yml
-
-      - name: Lint Kibana YAML
-        run: yamllint --strict configs/kibana.yml
-
-  terraform:
-    name: Terraform Validation
-    runs-on: ubuntu-latest
+  # 4. Terraform Validate
+  terraform-validate:
     needs: debug
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
-
-      - name: Terraform Format Check
-        run: |
+      - run: |
           cd terraform
-          pwd
-          ls -l
           terraform fmt -check
-
-      - name: Terraform Validate
-        run: |
-          cd terraform
           terraform validate
 
+  # 5. Ansible-lint
   ansible-lint:
-    name: Ansible Linting
-    runs-on: ubuntu-latest
     needs: debug
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install ansible-lint
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible-lint
-
-      - name: Lint Ansible Playbook
-        run: |
+      - run: sudo apt-get update && sudo apt-get install -y ansible-lint
+      - run: |
           cd ansible
-          pwd
-          ls -l
-          ansible-lint playbook.yml
+          if [ -f playbook.yml ]; then
+            ansible-lint playbook.yml
+          else
+            echo "playbook.yml missing!" && exit 1
+          fi

@@ -3,12 +3,3 @@ cluster.name: "soc-project"
 node.name: "elk-node-1"
 network.host: "localhost"
 http.port: 9200
-
-# Discovery settings for a single-node cluster
-discovery.type: single-node
-
-# Path settings
-path.data: "/var/lib/elasticsearch"
-path.logs: "/var/log/elasticsearch"
-
-# JVM options placed via Ansible heap.options file

@@ -54,7 +54,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "soc_vm" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t3.micro"          # Changed to a Free Tier–eligible type
+  instance_type          = "t3.micro" # Changed to a Free Tier–eligible type
   key_name               = aws_key_pair.soc_key.key_name
   vpc_security_group_ids = [aws_security_group.soc_sg.id]
 

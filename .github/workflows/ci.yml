@@ -15,8 +15,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
       - name: Lint Shell Scripts
-        run: |
-          shellcheck scripts/*.sh
+        run: shellcheck scripts/*.sh
 
   yamllint:
     name: YAML Linting
@@ -27,11 +26,10 @@ jobs:
       - name: Install yamllint
         run: sudo apt-get update && sudo apt-get install -y yamllint
 
-      - name: Lint Config Files
+      - name: Lint YAML Configs
         run: |
           yamllint --strict configs/elasticsearch.yml
           yamllint --strict configs/kibana.yml
-          yamllint --strict configs/logstash/wazuh.conf
 
   terraform:
     name: Terraform Validation
@@ -65,4 +63,5 @@ jobs:
           sudo apt-get install -y ansible-lint
 
       - name: Run ansible-lint
+        working-directory: ansible
         run: ansible-lint playbook.yml

@@ -2,38 +2,31 @@
 - name: SOC ELK Wazuh Setup
   hosts: all
   become: true
-  collections:
-    - community.general
-    - ansible.posix
 
   tasks:
     - name: Add Wazuh repository GPG key
       ansible.builtin.apt_key:
         url: https://packages.wazuh.com/key/GPG-KEY-WAZUH
         state: present
-
     - name: Add Wazuh apt repository
       ansible.builtin.apt_repository:
         repo: deb https://packages.wazuh.com/4.x/apt stable main
         filename: wazuh
         state: present
-
     - name: Install Wazuh Manager
       ansible.builtin.apt:
         name: wazuh-manager
         state: present
         update_cache: true
-
     - name: Install Filebeat
       ansible.builtin.apt:
         name: filebeat
         state: present
-
     - name: Copy Logstash Wazuh config into Filebeat
       ansible.builtin.copy:
         src: ../configs/logstash/wazuh.conf
         dest: /etc/filebeat/filebeat.yml
-
+        mode: '0644'
     - name: Enable and start Wazuh manager and filebeat
       ansible.builtin.service:
         name: "{{ item }}"
@@ -42,10 +35,8 @@
       loop:
         - wazuh-manager
         - filebeat
-
     - name: Ensure kernel IP forwarding is enabled
       ansible.posix.sysctl:
         name: net.ipv4.ip_forward
         value: "1"
         state: present
-

@@ -1,25 +1,8 @@
 SOC ELK Wazuh Deployment
 
 This repository provides an automated setup for a security operations center (SOC) stack using the ELK (Elasticsearch, Logstash, Kibana) stack and Wazuh. It includes scripts, Ansible playbooks, and CI workflows to install, configure, and validate each component.
-Repository Structure
 
-├── ansible/
-│ ├── playbook.yml # Installs and configures Wazuh Manager, Filebeat, and system settings
-│ └── roles/… # (Optional) Custom Ansible roles if extended
-├── configs/
-│ ├── elasticsearch.yml # Elasticsearch configuration
-│ ├── kibana.yml # Kibana configuration
-│ └── logstash/
-│ └── wazuh.conf # Logstash pipeline for Wazuh alerts
-├── scripts/
-│ ├── install_elk.sh # Installs Elasticsearch, Logstash, Kibana
-│ ├── install_wazuh.sh # Installs Wazuh Manager and Filebeat
-│ └── configure_kibana.sh # Installs Wazuh Kibana plugin and sets index pattern
-├── terraform/
-│ └── main.tf # Terraform definitions for cloud infrastructure
-└── .github/workflows/
-└── ci.yml # CI pipeline: shellcheck, yamllint, terraform, ansible-lint
-Prerequisites
+
 
     Git 2.25+
 

@@ -4,7 +4,7 @@ provider "aws" {
 
 resource "aws_key_pair" "soc_key" {
   key_name   = "soc-project-key"
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = file(var.public_key_path)
 }
 
 resource "aws_security_group" "soc_sg" {
@@ -66,3 +66,4 @@ data "aws_ami" "ubuntu" {
 output "public_ip" {
   value = aws_instance.soc_vm.public_ip
 }
+

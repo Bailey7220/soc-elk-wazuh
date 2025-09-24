@@ -1,0 +1,68 @@
+name: CI Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  shellcheck:
+    name: ShellCheck Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Lint Shell Scripts
+        run: |
+          shellcheck scripts/*.sh
+
+  yamllint:
+    name: YAML Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install yamllint
+        run: sudo apt-get update && sudo apt-get install -y yamllint
+
+      - name: Lint Config Files
+        run: |
+          yamllint --strict configs/elasticsearch.yml
+          yamllint --strict configs/kibana.yml
+          yamllint --strict configs/logstash/wazuh.conf
+
+  terraform:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+  ansible-lint:
+    name: Ansible Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install ansible-lint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible-lint
+
+      - name: Run ansible-lint
+        run: ansible-lint playbook.yml

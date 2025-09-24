@@ -4,6 +4,7 @@
   become: true
   collections:
     - community.general
+    - ansible.posix
 
   tasks:
     - name: Add Wazuh repository GPG key
@@ -43,7 +44,8 @@
         - filebeat
 
     - name: Ensure kernel IP forwarding is enabled
-      ansible.builtin.sysctl:
+      ansible.posix.sysctl:
         name: net.ipv4.ip_forward
         value: "1"
         state: present
+

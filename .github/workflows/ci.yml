@@ -68,7 +68,10 @@ jobs:
       - name: Install Ansible Core and ansible-lint via pip
         run: |
           pip3 install --upgrade pip
-          pip3 install ansible-core==2.18.8 ansible-lint
+          pip3 install ansible-core ansible-lint
+      - name: Install required Ansible collections
+        run: |
+          ansible-galaxy collection install community.general
       - name: Lint Ansible Playbook
         run: |
           cd ansible

@@ -19,25 +19,44 @@ jobs:
         run: shellcheck scripts/*.sh
 
   yamllint:
-    name: YAML Linting
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+  name: YAML Linting
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
 
-      - name: Install yamllint & dos2unix
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y yamllint dos2unix
+    - name: Debug file structure
+      run: |
+        echo "--- Root directory ---"
+        ls -la
+        echo "--- Configs directory ---"
+        ls -la configs/
+        echo "--- File type check ---"
+        file configs/elasticsearch.yml || echo "File not found"
 
-      - name: Normalize line endings
-        run: dos2unix configs/elasticsearch.yml
+    - name: Install yamllint & dos2unix
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y yamllint dos2unix
 
-      - name: Lint Elasticsearch YAML
-        run: yamllint --strict configs/elasticsearch.yml
+    - name: Normalize line endings (if file exists)
+      run: |
+        if [ -f configs/elasticsearch.yml ]; then
+          dos2unix configs/elasticsearch.yml
+        else
+          echo "configs/elasticsearch.yml not found, skipping normalization"
+        fi
 
-      - name: Lint Kibana YAML
-        run: yamllint --strict configs/kibana.yml
+    - name: Lint Elasticsearch YAML
+      run: |
+        if [ -f configs/elasticsearch.yml ]; then
+          yamllint --strict configs/elasticsearch.yml
+        else
+          echo "configs/elasticsearch.yml not found, skipping lint"
+          exit 1
+        fi
+
+        - name: Lint Kibana YAML
+          run: yamllint --strict configs/kibana.yml
 
   terraform:
     name: Terraform Validation

@@ -8,7 +8,7 @@ set -e
 systemctl restart kibana
 
 # Create index pattern via Kibana API (requires no auth by default)
-curl -XPOST "http://localhost:5601/api/saved_objects/index-pattern/wazuh-alerts-*" \
+curl -s -X POST http://localhost:5601/api/saved_objects/index-pattern/wazuh-alerts-* \
   -H "kbn-xsrf: true" \
   -H "Content-Type: application/json" \
   -d '{ "attributes": { "title": "wazuh-alerts-*", "timeFieldName": "@timestamp" } }'

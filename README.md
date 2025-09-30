@@ -30,17 +30,17 @@ Review and customize configuration files in configs/.
 
 Provision infrastructure (optional)
 
-cd terraform
-terraform init
-terraform plan
-terraform apply
+    cd terraform
+    terraform init
+    terraform plan
+    terraform apply
 
 Run installation scripts on your target host(s)
 
 # On the target machine:
-sudo bash scripts/install_elk.sh
-sudo bash scripts/install_wazuh.sh
-sudo bash scripts/configure_kibana.sh
+    sudo bash scripts/install_elk.sh
+    sudo bash scripts/install_wazuh.sh
+    sudo bash scripts/configure_kibana.sh
 
 Apply Ansible playbook (alternative to scripts)
 

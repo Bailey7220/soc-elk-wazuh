@@ -44,7 +44,7 @@ Run installation scripts on your target host(s)
 
 Apply Ansible playbook (alternative to scripts)
 
-ansible-playbook -i inventory ansible/playbook.yml
+    ansible-playbook -i inventory ansible/playbook.yml
 
 
 Access the stack

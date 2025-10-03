@@ -65,12 +65,12 @@ fi
 if [[ "${SKIP_SSL}" == "false" ]]; then
     log "Setting up Wazuh certificate directory..."
     mkdir -p /var/ossec/etc/ssl
-    cp ${CERT_DIR}/ca/ca-cert.pem /var/ossec/etc/ssl/
-    cp ${CERT_DIR}/wazuh/wazuh-cert.pem /var/ossec/etc/ssl/
-    cp ${CERT_DIR}/wazuh/wazuh-key.pem /var/ossec/etc/ssl/
+    cp "${CERT_DIR}/ca/ca-cert.pem" /var/ossec/etc/ssl/
+    cp "${CERT_DIR}/wazuh/wazuh-cert.pem" /var/ossec/etc/ssl/
+    cp "${CERT_DIR}/wazuh/wazuh-key.pem" /var/ossec/etc/ssl/
 
     # Set proper ownership
-    chown -R ${WAZUH_USER}:${WAZUH_USER} /var/ossec/etc/ssl
+    chown -R "${WAZUH_USER}:${WAZUH_USER}" /var/ossec/etc/ssl
     chmod 750 /var/ossec/etc/ssl
     chmod 640 /var/ossec/etc/ssl/*
 
@@ -80,9 +80,9 @@ fi
 # Step 6: Generate Wazuh agent enrollment password
 log "Generating secure agent enrollment password..."
 WAZUH_AGENT_PASSWORD=$(openssl rand -base64 32)
-echo "${WAZUH_AGENT_PASSWORD}" > ${AUTHD_PASS_FILE}
-chown root:${WAZUH_USER} ${AUTHD_PASS_FILE}
-chmod 640 ${AUTHD_PASS_FILE}
+echo "${WAZUH_AGENT_PASSWORD}" > "${AUTHD_PASS_FILE}"
+chown "root:${WAZUH_USER}" "${AUTHD_PASS_FILE}"
+chmod 640 "${AUTHD_PASS_FILE}"
 
 log "Agent enrollment password saved to ${AUTHD_PASS_FILE}"
 
@@ -198,11 +198,11 @@ log "Creating Wazuh configuration..."
 
 # Backup original config if it exists
 if [[ -f "${WAZUH_CONFIG}" ]]; then
-    cp ${WAZUH_CONFIG} ${WAZUH_CONFIG}.backup.$(date +%Y%m%d_%H%M%S)
+    cp "${WAZUH_CONFIG}" "${WAZUH_CONFIG}.backup.$(date +%Y%m%d_%H%M%S)"
 fi
 
 # Create enhanced Wazuh configuration
-cat > ${WAZUH_CONFIG} << 'EOF'
+cat > "${WAZUH_CONFIG}" << 'EOF'
 <!--
   Wazuh - Manager configuration
   More info at: https://documentation.wazuh.com
@@ -360,12 +360,12 @@ if [[ "${SKIP_SSL}" == "false" ]]; then
     <ssl_agent_ca>/var/ossec/etc/ssl/ca-cert.pem</ssl_agent_ca>\
     <ssl_manager_cert>/var/ossec/etc/ssl/wazuh-cert.pem</ssl_manager_cert>\
     <ssl_manager_key>/var/ossec/etc/ssl/wazuh-key.pem</ssl_manager_key>
-    }' ${WAZUH_CONFIG}
+    }' "${WAZUH_CONFIG}"
 fi
 
 # Set proper ownership
-chown ${WAZUH_USER}:${WAZUH_USER} ${WAZUH_CONFIG}
-chmod 640 ${WAZUH_CONFIG}
+chown "${WAZUH_USER}:${WAZUH_USER}" "${WAZUH_CONFIG}"
+chmod 640 "${WAZUH_CONFIG}"
 
 log "Wazuh configuration created successfully"
 

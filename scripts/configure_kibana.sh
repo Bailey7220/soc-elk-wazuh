@@ -48,8 +48,8 @@ fi
 # Step 2: Get Elasticsearch credentials if available
 if [[ -f "${ES_PASS_FILE}" ]] && [[ "${USE_BASIC_AUTH}" == "true" ]]; then
     log "Retrieving Elasticsearch credentials..."
-    KIBANA_SYSTEM_PASSWORD=$(grep "^kibana_system:" ${ES_PASS_FILE} | cut -d: -f2)
-    ELASTIC_PASSWORD=$(grep "^elastic:" ${ES_PASS_FILE} | cut -d: -f2)
+    KIBANA_SYSTEM_PASSWORD=$(grep "^kibana_system:" "${ES_PASS_FILE}" | cut -d: -f2)
+    ELASTIC_PASSWORD=$(grep "^elastic:" "${ES_PASS_FILE}" | cut -d: -f2)
     
     if [[ -z "${KIBANA_SYSTEM_PASSWORD}" ]]; then
         warn "Kibana system password not found, using basic configuration"
@@ -68,12 +68,12 @@ systemctl stop kibana || warn "Kibana was not running"
 if [[ -f "${CERT_DIR}/kibana/kibana-cert.pem" ]]; then
     log "Setting up Kibana SSL certificates..."
     mkdir -p /etc/kibana/certs
-    cp ${CERT_DIR}/ca/ca-cert.pem /etc/kibana/certs/
-    cp ${CERT_DIR}/kibana/kibana-cert.pem /etc/kibana/certs/
-    cp ${CERT_DIR}/kibana/kibana-key.pem /etc/kibana/certs/
+    cp "${CERT_DIR}/ca/ca-cert.pem" /etc/kibana/certs/
+    cp "${CERT_DIR}/kibana/kibana-cert.pem" /etc/kibana/certs/
+    cp "${CERT_DIR}/kibana/kibana-key.pem" /etc/kibana/certs/
 
     # Set proper ownership
-    chown -R ${KIBANA_USER}:${KIBANA_USER} /etc/kibana/certs
+    chown -R "${KIBANA_USER}:${KIBANA_USER}" /etc/kibana/certs
     chmod 750 /etc/kibana/certs
     chmod 640 /etc/kibana/certs/*
 
@@ -95,14 +95,14 @@ log "Creating Kibana configuration..."
 
 # Backup original config if it exists
 if [[ -f "${KIBANA_CONFIG}" ]]; then
-    cp ${KIBANA_CONFIG} ${KIBANA_CONFIG}.backup.$(date +%Y%m%d_%H%M%S)
+    cp "${KIBANA_CONFIG}" "${KIBANA_CONFIG}.backup.$(date +%Y%m%d_%H%M%S)"
 fi
 
 # Create configuration based on security setup
 if [[ "${USE_SSL}" == "true" ]] && [[ "${USE_BASIC_AUTH}" == "true" ]]; then
     # Full security configuration
     log "Creating full security configuration..."
-    cat > ${KIBANA_CONFIG} << EOF
+    cat > "${KIBANA_CONFIG}" << EOF
 server.port: 5601
 server.host: "0.0.0.0"
 server.name: "soc-kibana"
@@ -147,7 +147,7 @@ EOF
 elif [[ "${USE_SSL}" == "true" ]]; then
     # SSL only configuration
     log "Creating SSL-only configuration..."
-    cat > ${KIBANA_CONFIG} << EOF
+    cat > "${KIBANA_CONFIG}" << EOF
 server.port: 5601
 server.host: "0.0.0.0"
 server.name: "soc-kibana"
@@ -183,7 +183,7 @@ EOF
 else
     # Basic HTTP configuration (original functionality maintained)
     log "Creating basic HTTP configuration..."
-    cat > ${KIBANA_CONFIG} << EOF
+    cat > "${KIBANA_CONFIG}" << EOF
 server.port: 5601
 server.host: "0.0.0.0"
 server.name: "soc-kibana"
@@ -212,13 +212,13 @@ EOF
 fi
 
 # Set proper ownership
-chown ${KIBANA_USER}:${KIBANA_USER} ${KIBANA_CONFIG}
-chmod 660 ${KIBANA_CONFIG}
+chown "${KIBANA_USER}:${KIBANA_USER}" "${KIBANA_CONFIG}"
+chmod 660 "${KIBANA_CONFIG}"
 
 # Step 7: Create log directory
 log "Setting up Kibana logging..."
 mkdir -p /var/log/kibana
-chown ${KIBANA_USER}:${KIBANA_USER} /var/log/kibana
+chown "${KIBANA_USER}:${KIBANA_USER}" /var/log/kibana
 chmod 755 /var/log/kibana
 
 # Step 8: Start Kibana
@@ -253,7 +253,7 @@ KIBANA_VERSION=$(dpkg -l kibana | tail -1 | awk '{print $3}' | cut -d'-' -f1)
 WAZUH_VERSION="4.8.0"
 
 # Install Wazuh plugin
-sudo -u ${KIBANA_USER} /usr/share/kibana/bin/kibana-plugin install \
+sudo -u "${KIBANA_USER}" /usr/share/kibana/bin/kibana-plugin install \
     "https://packages.wazuh.com/4.x/ui/kibana/wazuh_kibana-${WAZUH_VERSION}_${KIBANA_VERSION}-1.zip" || \
     warn "Wazuh plugin installation failed - may need manual installation"
 
@@ -289,7 +289,7 @@ fi
 
 # Create Wazuh index pattern (original functionality maintained)
 log "Creating Wazuh alerts index pattern..."
-curl -k ${AUTH_HEADER} -X POST "${KIBANA_URL}/api/saved_objects/index-pattern/wazuh-alerts-*" \
+curl -k ${AUTH_HEADER:+"$AUTH_HEADER"} -X POST "${KIBANA_URL}/api/saved_objects/index-pattern/wazuh-alerts-*" \
     -H "Content-Type: application/json" \
     -H "kbn-xsrf: true" \
     -d '{
@@ -301,7 +301,7 @@ curl -k ${AUTH_HEADER} -X POST "${KIBANA_URL}/api/saved_objects/index-pattern/wa
 
 # Create Filebeat index pattern
 log "Creating Filebeat index pattern..."
-curl -k ${AUTH_HEADER} -X POST "${KIBANA_URL}/api/saved_objects/index-pattern/filebeat-*" \
+curl -k ${AUTH_HEADER:+"$AUTH_HEADER"} -X POST "${KIBANA_URL}/api/saved_objects/index-pattern/filebeat-*" \
     -H "Content-Type: application/json" \
     -H "kbn-xsrf: true" \
     -d '{

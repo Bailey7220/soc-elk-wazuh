@@ -61,29 +61,29 @@ fi
 # Step 4: Create Elasticsearch certificate directory
 log "Setting up Elasticsearch certificate directory..."
 mkdir -p /etc/elasticsearch/certs
-cp ${CERT_DIR}/ca/ca-cert.pem /etc/elasticsearch/certs/
-cp ${CERT_DIR}/elasticsearch/elasticsearch.p12 /etc/elasticsearch/certs/
-cp ${CERT_DIR}/elasticsearch/elasticsearch-cert.pem /etc/elasticsearch/certs/
-cp ${CERT_DIR}/elasticsearch/elasticsearch-key.pem /etc/elasticsearch/certs/
+cp "${CERT_DIR}/ca/ca-cert.pem" /etc/elasticsearch/certs/
+cp "${CERT_DIR}/elasticsearch/elasticsearch.p12" /etc/elasticsearch/certs/
+cp "${CERT_DIR}/elasticsearch/elasticsearch-cert.pem" /etc/elasticsearch/certs/
+cp "${CERT_DIR}/elasticsearch/elasticsearch-key.pem" /etc/elasticsearch/certs/
 
 # Set proper ownership
-chown -R ${ES_USER}:${ES_USER} /etc/elasticsearch/certs
+chown -R "${ES_USER}:${ES_USER}" /etc/elasticsearch/certs
 chmod 750 /etc/elasticsearch/certs
 chmod 640 /etc/elasticsearch/certs/*
 
 # Step 5: Configure Elasticsearch keystore
 log "Configuring Elasticsearch keystore..."
-cd ${ES_HOME}
+cd "${ES_HOME}"
 
 # Create keystore if it doesn't exist
 if [[ ! -f "/etc/elasticsearch/elasticsearch.keystore" ]]; then
-    sudo -u ${ES_USER} ${ES_HOME}/bin/elasticsearch-keystore create
+    sudo -u "${ES_USER}" "${ES_HOME}/bin/elasticsearch-keystore" create
 fi
 
 # Add keystore passwords
-echo "${KEYSTORE_PASS}" | sudo -u ${ES_USER} ${ES_HOME}/bin/elasticsearch-keystore add -x xpack.security.transport.ssl.keystore.secure_password
-echo "${KEYSTORE_PASS}" | sudo -u ${ES_USER} ${ES_HOME}/bin/elasticsearch-keystore add -x xpack.security.transport.ssl.truststore.secure_password
-echo "${KEYSTORE_PASS}" | sudo -u ${ES_USER} ${ES_HOME}/bin/elasticsearch-keystore add -x xpack.security.http.ssl.keystore.secure_password
+echo "${KEYSTORE_PASS}" | sudo -u "${ES_USER}" "${ES_HOME}/bin/elasticsearch-keystore" add -x xpack.security.transport.ssl.keystore.secure_password
+echo "${KEYSTORE_PASS}" | sudo -u "${ES_USER}" "${ES_HOME}/bin/elasticsearch-keystore" add -x xpack.security.transport.ssl.truststore.secure_password
+echo "${KEYSTORE_PASS}" | sudo -u "${ES_USER}" "${ES_HOME}/bin/elasticsearch-keystore" add -x xpack.security.http.ssl.keystore.secure_password
 
 log "Keystore configured successfully"
 
@@ -92,11 +92,11 @@ log "Creating secure Elasticsearch configuration..."
 
 # Backup original config if it exists
 if [[ -f "${ES_CONFIG}" ]]; then
-    cp ${ES_CONFIG} ${ES_CONFIG}.backup.$(date +%Y%m%d_%H%M%S)
+    cp "${ES_CONFIG}" "${ES_CONFIG}.backup.$(date +%Y%m%d_%H%M%S)"
 fi
 
 # Create new secure configuration
-cat > ${ES_CONFIG} << 'EOF'
+cat > "${ES_CONFIG}" << 'EOF'
 # ======================== Elasticsearch Configuration =========================
 cluster.name: soc-elk-cluster
 node.name: soc-elk-node-1
@@ -146,8 +146,8 @@ xpack.security.audit.logfile.events.include:
 EOF
 
 # Set proper ownership
-chown ${ES_USER}:${ES_USER} ${ES_CONFIG}
-chmod 660 ${ES_CONFIG}
+chown "${ES_USER}:${ES_USER}" "${ES_CONFIG}"
+chmod 660 "${ES_CONFIG}"
 
 log "Elasticsearch configuration updated with security settings"
 
@@ -157,7 +157,7 @@ JVM_OPTIONS="/etc/elasticsearch/jvm.options"
 
 # Backup JVM options
 if [[ -f "${JVM_OPTIONS}" ]]; then
-    cp ${JVM_OPTIONS} ${JVM_OPTIONS}.backup.$(date +%Y%m%d_%H%M%S)
+    cp "${JVM_OPTIONS}" "${JVM_OPTIONS}.backup.$(date +%Y%m%d_%H%M%S)"
 fi
 
 # Get system memory and calculate heap size (50% of total RAM, max 32GB)
@@ -176,8 +176,8 @@ if [[ ${HEAP_SIZE_MB} -lt 1024 ]]; then
 fi
 
 # Update JVM options
-sed -i "s/^-Xms.*/-Xms${HEAP_SIZE_MB}m/" ${JVM_OPTIONS}
-sed -i "s/^-Xmx.*/-Xmx${HEAP_SIZE_MB}m/" ${JVM_OPTIONS}
+sed -i "s/^-Xms.*/-Xms${HEAP_SIZE_MB}m/" "${JVM_OPTIONS}"
+sed -i "s/^-Xmx.*/-Xmx${HEAP_SIZE_MB}m/" "${JVM_OPTIONS}"
 
 log "JVM heap size set to ${HEAP_SIZE_MB}MB"
 
@@ -261,7 +261,7 @@ BEATS_PASSWORD=$(openssl rand -base64 32)
 
 # Save passwords securely
 PASS_FILE="/etc/elasticsearch/passwords.txt"
-cat > ${PASS_FILE} << EOF
+cat > "${PASS_FILE}" << EOF
 # SOC ELK Wazuh User Passwords
 # Generated: $(date)
 # KEEP THIS FILE SECURE!
@@ -279,12 +279,12 @@ soc_analyst:$(openssl rand -base64 32)
 soc_viewer:$(openssl rand -base64 32)
 EOF
 
-chmod 600 ${PASS_FILE}
-chown root:${ES_USER} ${PASS_FILE}
+chmod 600 "${PASS_FILE}"
+chown "root:${ES_USER}" "${PASS_FILE}"
 
 # Use elasticsearch-setup-passwords with auto-generated passwords
 log "Configuring built-in user passwords..."
-${ES_HOME}/bin/elasticsearch-setup-passwords interactive -u https://localhost:9200 << EOF || warn "Password setup may have failed - check manually"
+"${ES_HOME}/bin/elasticsearch-setup-passwords" interactive -u https://localhost:9200 << EOF || warn "Password setup may have failed - check manually"
 y
 ${ELASTIC_PASSWORD}
 ${ELASTIC_PASSWORD}
@@ -294,10 +294,10 @@ ${KIBANA_PASSWORD}
 ${KIBANA_PASSWORD}
 ${LOGSTASH_PASSWORD}
 ${LOGSTASH_PASSWORD}
-$(grep apm_system ${PASS_FILE} | cut -d: -f2)
-$(grep apm_system ${PASS_FILE} | cut -d: -f2)
-$(grep remote_monitoring_user ${PASS_FILE} | cut -d: -f2)
-$(grep remote_monitoring_user ${PASS_FILE} | cut -d: -f2)
+$(grep apm_system "${PASS_FILE}" | cut -d: -f2)
+$(grep apm_system "${PASS_FILE}" | cut -d: -f2)
+$(grep remote_monitoring_user "${PASS_FILE}" | cut -d: -f2)
+$(grep remote_monitoring_user "${PASS_FILE}" | cut -d: -f2)
 EOF
 
 # Step 12: Enable and start Logstash

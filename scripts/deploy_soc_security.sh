@@ -97,7 +97,7 @@ step "Running final verification..."
 # Check services
 log "Verifying service status..."
 for service in elasticsearch kibana wazuh-manager filebeat; do
-    if systemctl is-active --quiet ${service}; then
+    if systemctl is-active --quiet "${service}"; then
         log "✓ ${service} is running"
     else
         warn "✗ ${service} is not running"
@@ -207,7 +207,12 @@ echo -e "${GREEN}╚════════════════════
 echo
 echo -e "${YELLOW}🌐 Kibana Web Interface: ${NC}https://$(hostname -I | awk '{print $1}'):5601"
 echo -e "${YELLOW}👤 Default Admin User: ${NC}elastic"
-echo -e "${YELLOW}🔑 Admin Password: ${NC}$(grep "^elastic:" /etc/elasticsearch/passwords.txt 2>/dev/null | cut -d: -f2 || echo "Check /etc/elasticsearch/passwords.txt")"
+if [[ -f "/etc/elasticsearch/passwords.txt" ]]; then
+    ELASTIC_PASSWORD=$(grep "^elastic:" /etc/elasticsearch/passwords.txt 2>/dev/null | cut -d: -f2 || echo "Check /etc/elasticsearch/passwords.txt")
+    echo -e "${YELLOW}🔑 Admin Password: ${NC}${ELASTIC_PASSWORD}"
+else
+    echo -e "${YELLOW}🔑 Admin Password: ${NC}Check /etc/elasticsearch/passwords.txt"
+fi
 echo
 echo -e "${YELLOW}📋 Important Files:${NC}"
 echo -e "   • SSL Certificates: /etc/ssl/soc-certs/"
